@@ -24,7 +24,6 @@ public static class ChatJailbreak_ChatController_Update_Postfix
         {
             __instance.freeChatField.textArea.characterLimit = int.MaxValue;
         }
-
         else if (AUnlocker.PatchChat.Value)
         {
             __instance.freeChatField.textArea.AllowPaste = true;
@@ -60,7 +59,6 @@ public static class EditColorIndicators_FreeChatInputField_UpdateCharCount_Postf
                 _ => Color.red
             };
         }
-
         else if (AUnlocker.PatchChat.Value)
         {
             var length = __instance.textArea.text.Length;
@@ -110,11 +108,12 @@ public static class AllowAllCharacters_TextBoxTMP_IsCharAllowed_Prefix
     /// <returns><c>false</c> to skip the original method, <c>true</c> to allow the original method to run.</returns>
     public static bool Prefix(TextBoxTMP __instance, ref bool __result, char i)
     {
-        // Original game code:
-        // public bool IsCharAllowed(char i)
-        // {
-        //   return this.IpMode ? i >= '0' && i <= '9' || i == '.' : i == ' ' || i >= 'A' && i <= 'Z' || i >= 'a' && i <= 'z' || i >= '0' && i <= '9' || i >= 'À' && i <= 'ÿ' || i >= 'Ѐ' && i <= 'џ' || i >= '\u3040' && i <= '㆟' || i >= 'ⱡ' && i <= '힣' || this.AllowSymbols && TextBoxTMP.SymbolChars.Contains(i) || this.AllowEmail && TextBoxTMP.EmailChars.Contains(i);
-        // }
+        // Жёстко разрешаем русские буквы 'о' и 'м' (и заглавные)
+        if (i == 'о' || i == 'м' || i == 'О' || i == 'М')
+        {
+            __result = true;
+            return false;
+        }
 
         if (!AUnlocker.AllowAllCharacters.Value) return true;
 
@@ -148,28 +147,12 @@ public static class AllowAllCharacters_TextBoxTMP_IsCharAllowed_Prefix
             __result = true;
             return false;
         }
-        // Bugfix: backspace messing with chat message;
-        // newline / "enter" to prevent message sending "randomly" (see issue #25)
         if (i is '\b' or '\n' or '\r')
         {
             __result = false;
             return false;
         }
 
-        // // logging
-        // string charRepresentation = i switch
-        // {
-        //     '\b' => "\\b",
-        //     '\n' => "\\n",
-        //     '\r' => "\\r",
-        //     _ => i.ToString()
-        // };
-
-        // Debug.Log($"IsCharAllowed({charRepresentation}) (Unicode: {(int)i}) = {__result}");
-
-        // accept any other character by default (including emojis, special characters, etc.)
-        // this can cause issues where we would have to deny certain characters
-        // that are messing with the chatbox (like we saw in issues #25 and #31)
         __result = true;
         return false;
     }
@@ -186,7 +169,7 @@ public static class AllowPaste_TextBoxTMP_Start_Postfix
     {
         if (!AUnlocker.PatchChat.Value) return;
 
-        __instance.allowAllCharacters = true; // not used by game's code, but I include it anyway
+        __instance.allowAllCharacters = true; // not used by game's code, but included anyway
         __instance.AllowEmail = true;
         __instance.AllowPaste = true;
         __instance.AllowSymbols = true;
